@@ -1,12 +1,13 @@
 # Utils
 
 This is a small set of tools that scratch various personal itches. You
-may or may not find and of them remotely useful.
+may or may not find any of them remotely useful.
 
 
 (See also the excellent [moreutils][].)
 
 [moreutils]: https://joeyh.name/code/moreutils/
+
 
 ## dl
 
@@ -58,6 +59,7 @@ Piped through `dl`, this produces:
 The optional `-d` argument goes one step further and omits mention of
 the files, listing only the directories.
 
+
 ## git-purge
 
 This should really be fleshed out into a script that does some basic
@@ -86,6 +88,7 @@ prints empty arrays on a single line.
 
 [jsonpp]: https://github.com/jmhodges/jsonpp
 
+
 ## loo
 
 Short for **l**ast **o**ccurrence **o**nly. (Get your mind out of the
@@ -109,13 +112,22 @@ Given the input:
     Charles
     David
 
-Since it would drop the first occurrences of 'Alice' and 'David'. If invoked as `foo` (via the magic of soft/hard links), it will instead produce output containing only the *first* instance of repeatedly-occurring lines. The above input would become:
+Since it would drop the first occurrences of 'Alice' and 'David'. If
+invoked as `foo` (via the magic of soft/hard links), it will instead
+produce output containing only the *first* instance of repeatedly-
+occurring lines. The above input would become:
 
     Alice
     Bob
     David
     Charles
 
+
 ## path
 
-At least 50 cents of solution to a nickel's worth of problem. So it goes. I hate deciphering the output of `echo $PATH`; now I don't have to. By default, this script pretty-prints the value of `$PATH`, with one entry per line. However, it can also be used to generate a new colon-separated value for `$PATH`, optionally removing duplicate occurrences of paths.
+At least 50 cents of solution to a nickel's worth of problem. So it
+goes. I hate deciphering the output of `echo $PATH`; now I don't have
+to. By default, this script pretty-prints the value of `$PATH`, with
+one entry per line. However, it can also be used to generate a new
+colon-separated value for `$PATH`, optionally removing duplicate
+occurrences of paths.
