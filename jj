@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby -w
+
+# Pretty-print JSON input from a file, or stdin.
+
+require 'json'
+
+# To do (maybe):
+#   - Add an option to insert a splitting line between the prettifications of
+#     multiple sources. (Easy.)
+#   - Add an option to convert multiple sources into a single array.
+#     (Trickier, but doable.)
+
+input = String.new
+ARGF.each_line do |line|
+  input << line
+  if ARGF.eof?
+    jj JSON.parse(input)
+    input.clear
+  end
+end

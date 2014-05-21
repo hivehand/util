@@ -1,0 +1,85 @@
+#!/usr/bin/env ruby -w
+
+# loo: last ocurrence only.
+#
+# Return the last occurrence of every line in the input.
+#
+# If called as 'foo' (via the magic of symlinks), outputs the FIRST
+# occurence of each line instead.
+
+require 'optparse'
+
+def parse_args
+  options = {}
+
+  op = OptionParser.new do |opts|
+    opts.banner = """Usage: #{opts.program_name} [option]..."""
+
+    opts.on("-o", "--output FILE", 'Output. Store results in file.') do |file|
+      options[:output] = file
+    end
+  end
+
+  op.parse!
+
+  options
+end
+
+
+# Do the actual extraction of unique lines. By default, sort the hash
+# of values and line-number hash by line numbers; then return the
+# values. If given any other value for `order`, exploit Ruby's hash-
+# key order preservation to produce output containing the *first*
+# occurence of any given line.
+
+def singularize(source, order=:last)
+  form = {}
+
+  input = source.readlines
+  input.each_with_index do |line, i|
+    form[line.rstrip] = i
+  end
+
+  if order == :last
+    results = form.sort_by { |key, value| value }
+    results.map(&:first)
+  else
+    form.keys
+  end
+end
+
+
+# This takes the name of a destination file and a block.
+#
+# It creates a temporary file and proceeds to invoke the block,
+# passing the latter a handle to the temporary file. When the block
+# completes execution, it closes the file and renames so as to
+# overwrite the target.
+#
+# The original motivation was to make overwriting a file atomic. A
+# reader may see the old file, or the new file, but will never catch a
+# write in progress.
+
+def atomic_write(target_name)
+  temp_name = %x[mktemp].chomp
+  handle = File.open(temp_name, 'w')
+  yield(handle)
+  handle.close
+  File.rename(temp_name, target_name)
+end
+
+# -----------------
+
+options = parse_args
+
+cmd_name = File.basename(__FILE__)
+
+limit = (cmd_name == 'loo' ? :last : :first)
+
+results = singularize(ARGF, limit)
+
+if options[:output]
+  atomic_write(options[:output]) { |handle| handle.puts results }
+else
+  puts results
+end

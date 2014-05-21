@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby -w
+
+# Present and manipulate paths.
+
+require 'optparse'
+
+class Path
+  def initialize(*args)
+    path_string = args.empty? ? ENV['PATH'] : args.join(":")
+    @elements = path_string.split(/:/)
+  end
+
+  def clean
+    @elements.delete('')
+    @elements.uniq!
+  end
+
+  def show(separator)
+    puts @elements.join(separator)
+  end
+end
+
+
+def parse_args
+  options = {}
+
+  op = OptionParser.new do |opts|
+    opts.banner = <<-EOS.gsub(/^ */, '')
+      Usage: #{opts.program_name} [option]... [argument]...
+
+      If called with non-flag command-line arguments, assemble them into a
+      new PATH value and emit it. The current $PATH is not included unless
+      explicitly mentioned: this lets you control the prepending or
+      appending of new values.
+
+      In the absence of non-flag command-line arguments, emit the current
+      $PATH.
+    EOS
+
+    options[:clean] = false
+    opts.on("-c", "--clean", "Clean path, removing any dupes.") do
+      options[:clean] = true
+    end
+
+    opts.on("-p", "--pack", "Pack path into one long line.") do
+      options[:pack] = true
+    end
+  end
+
+  args = op.parse!
+
+  [args, options]
+end
+
+args, options = parse_args
+
+separator = options[:pack] ? ":" : "\n"
+
+path = Path.new(*args)
+path.clean if options[:clean]
+path.show(separator)

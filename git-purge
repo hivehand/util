@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+git reset -q HEAD ${@}
+git checkout -- ${@}
+git clean -fd ${@}

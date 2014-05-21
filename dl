@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby -w
+
+# dl: directory list.
+#
+# Take a collection of paths from either stdin or a collection of files.
+#
+# Group items by their parent directories.
+
+require 'optparse'
+
+class PathSet
+  def initialize
+    @paths = Hash.new { |hash, key| hash[key] = [] }
+  end
+
+  def add(path)
+    @paths[File.dirname(path)] << File.basename(path)
+  end
+
+  def show(dirs_only = false)
+    @paths.sort.each do |dir, files|
+      puts dir
+      unless dirs_only
+        files.each do |file|
+          puts "  #{file}"
+        end
+        puts
+      end
+    end
+  end
+end
+
+
+def parse_args
+  options = {}
+
+  op = OptionParser.new do |opts|
+    opts.banner = "Usage: #{opts.program_name} [option]... [argument]..."
+
+    options[:dirs_only] = false
+    opts.on("-d", "--dirs_only", "Show only the directory components.") do
+      options[:dirs_only] = true
+    end
+
+  end
+
+  op.parse!
+
+  options
+end
+
+# -----------------
+
+options = parse_args
+
+pathset = PathSet.new()
+
+ARGF.each_line do |line|
+  pathset.add(line.chomp)
+end
+
+pathset.show(options[:dirs_only])
