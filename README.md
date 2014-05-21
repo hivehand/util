@@ -88,7 +88,7 @@ prints empty arrays on a single line.
 
 ## loo
 
-Short for **l**ast **o**ccurrence **o**nly. (Get your mind out of the
+Short for Last Occurrence Only. (Get your mind out of the
 gutter.) `loo` removes all but the last instance of any repeatedly-
 occurring lines from its input. Unlike `uniq`, it's not limited to
 repitions of successive lines.
