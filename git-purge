@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
-git reset -q HEAD ${@}
-git checkout -- ${@}
-git clean -fd ${@}
+if [ -z "${@}" ]; then
+  target="."
+else
+  target="${@}"
+fi
+
+echo -n "Really purge \"${target}\"? "
+
+read answer
+
+if [[ $answer =~ [Yy] ]]; then
+  git reset -q HEAD ${target}
+  git checkout -- ${target}
+  git clean -fd ${target}
+else
+  echo "Bailing."
+fi

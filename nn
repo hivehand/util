@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby -w
+
+# nn: normalize names.
+
+# A quasi-generic file renamer. Splits the provided file names along the most
+# commonly-used separators, capitalizes each word, and assembles the result back
+# before renaming the files. It also uses the Xcode SetFile command to hide the
+# extensions.
+
+require 'optparse'
+
+def parse_args
+  options = {}
+
+  op = OptionParser.new do |opts|
+    opts.banner = "Usage: #{opts.program_name} [option] filename [filename...]"
+
+    opts.on("-d", "--dry", "Report what would be done; don't actually do it.") do
+      options[:dry] = true
+    end
+  end
+
+  args = op.parse!
+
+  [args, options]
+end
+
+# -----------------
+
+
+args, options = parse_args
+
+splitter = /[-_ \.]/
+pairs = []
+
+args.each do |name|
+  unless File.directory?(name)
+    original = File.basename(name)
+
+    dirname = File.dirname(name)
+    extension = File.extname(name)
+    basename = File.basename(name, extension)
+
+    newform = basename.split(splitter)
+    newform.map! { |e| e.capitalize }
+
+    revised = newform.join(" ") + extension
+
+    Dir.chdir(dirname) do
+      unless revised == original
+        pairs << [original, revised]
+        File.rename(original, revised) unless options[:dry]
+      end
+      %x(SetFile -a E "#{revised}") unless options[:dry]
+    end
+  end
+end
+
+# Find get the length of the longest name on the left-hand side.
+width = pairs.map{ |pair| pair[0].length }.max
+
+if pairs.empty?
+  puts "No files to operate on."
+else
+  pairs.each do |pair|
+    printf("%#{width}s => %s\n", pair[0], pair[1])
+  end
+end
