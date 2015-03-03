@@ -6,11 +6,11 @@ else
   target="${@}"
 fi
 
-echo -n "Really purge \"${target}\"? "
+echo -n "Really purge \"${target}\"? (y/n) "
 
 read answer
 
-if [[ $answer =~ [Yy] ]]; then
+if [[ $answer =~ ^[Yy]$ ]]; then
   git reset -q HEAD ${target}
   git checkout -- ${target}
   git clean -fd ${target}
