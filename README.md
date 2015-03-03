@@ -17,7 +17,7 @@ parse. Unfortunately, they're a little harder for humans to read,
 especially when the question the humans are trying to answer is "Which
 directory should I go poking around in first?"
 
-`dl takes a succession of paths as input, performs some grouping, and
+`dl` takes a succession of paths as input, performs some grouping, and
 emits a set of per-directory listings.
 
 As a simple example, `grep -rl ruby` in one of my personal directories
@@ -62,14 +62,34 @@ the files, listing only the directories.
 
 ## git-purge
 
-This should really be fleshed out into a script that does some basic
-argument-checking. (In particular, if not passed a path, it will
-neither complain nor do anything of interest.)
+If you were to take a cue from Ripley in *Aliens*, and set out to build a
+flamethrower that sported both a chainsaw bayonet and a grenade launcher capable
+of flinging water balloons filled with hydrochloric acid, then you might
+ultimately produce a tool as dangerous, as prone to creating inadvertent
+collateral damage, as this one.
 
-It is nevertheless useful if you want to brutally and thoroughly clear
-a repository, or part thereof, of any local changes. *Nota bene* that
-it will **lose data**---indeed, that's the whole point---so use with
-care.
+There are nevertheless times when you want to brutally and thoroughly clear
+a repository, or part thereof, of any local changes, without going to the trouble of cloning a fresh copy from origin. That's where this script comes in.
+
+Given a target path, it will:
+
+    git reset -q HEAD ${target}
+    git checkout -- ${target}
+    git clean -fd ${target} 
+
+If *not* given a target path, it will default to the current directory.
+Just to be crystal clear: this is a tool designed from the outset to **throw away** data, so use with care.
+
+
+## git-report
+
+A very, *very* simple wrapper that just does the following:
+
+    git fetch
+    git status --column
+    git stash list
+
+It's a one-command mechanism for getting a quick report on the state of the current repository and branch.
 
 
 ## jj
