@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+if [ "${@}" ] ; then
+  color="${@}"
+else
+  color="on"
+fi
+
+blink1-tool -q -m 0 --${color} --blink 5

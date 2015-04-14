@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-
-git fetch
-git status --column
-git stash list
