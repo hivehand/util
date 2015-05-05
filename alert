@@ -1,9 +1,54 @@
-#! /usr/bin/env bash
+#! /usr/bin/env ruby
 
-if [ "${@}" ] ; then
-  color="${@}"
-else
-  color="on"
-fi
+require 'time'
 
-blink1-tool -q -m 0 --${color} --blink 5
+# Usage:
+#
+#   alert
+#   alert yellow
+#   alert at 17:00
+#   alert red at 11:29
+#
+# If no time is specified, alert immediately.
+# If no color is specified, default to white.
+
+def parse_args
+  time = 0
+  color = 'on'
+
+  until ARGV.empty? do
+    arg = ARGV.shift
+
+    # Note that the code below won't deal with, say, alerting you just after
+    # midnight. We'll cross that bridge if we ever come to it.
+    if arg.eql?('at')
+      now = Time.now
+      later = Time.parse(ARGV.shift)
+      abort "#{later.strftime('%H:%M:%S')} is in the past!" if now > later
+      time = later - now
+
+    # Someday we might implement the handling of relative delays, should we
+    # ever decide that we actually need them.
+
+    # elsif arg.eql?('in')
+    #   duration = ARGV.shift
+
+    else
+      color = arg
+    end
+
+  end
+
+  [time, color]
+end
+
+# --------
+
+time, color = parse_args
+
+# fork() won't work on Windows or NetBSD. (File under "Boo frickin' hoo".)
+
+fork {
+  sleep(time)
+  %x(blink1-tool -q -m 0 -t 250 --#{color} --blink 6)
+}

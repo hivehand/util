@@ -8,6 +8,11 @@ may or may not find any of them remotely useful.
 
 [moreutils]: https://joeyh.name/code/moreutils/
 
+## alert
+
+A thin wrapper around [blink1-tool](http://blink1.thingm.com/blink1-tool/), the command-line interface to the nifty little USB LED gadget known as [blink(1)](http://blink1.thingm.com).
+
+It triggers six flashes over three seconds, in the color of your choice. If no color is given, it defaults to white. Specify a time in the future and it will flash then.
 
 ## dl
 
@@ -151,3 +156,10 @@ to. By default, this script pretty-prints the value of `$PATH`, with
 one entry per line. However, it can also be used to generate a new
 colon-separated value for `$PATH`, optionally removing duplicate
 occurrences of paths.
+
+
+## tts
+
+'Table To Stream'. Some command-line tools, notably [homebrew](http://brew.sh)'s `brew update`, output lists of names carefully arranged into multiple columns.
+
+Since I haven't found a way to make homebrew output a single-line list of updated formulae, which would be handy as input to `brew info` or `brew desc`, I've done the next best thing: written a little hack that takes a table of names, and turns it back into a single-line list.

@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby -w
+
+# tts: table to stream
+#
+# Pivot a series of columns into a single stream of names.
+# Handy for, among other things, processing brew output.
+
+# Pivot a table.
+
+def pivot(table)
+  pivoted = []
+  row_lengths = table.map { |row| row.length }
+  length_limit = row_lengths.max - 1
+
+  for i in 0..length_limit
+    pivoted << table.map { |row| row[i] }
+  end
+
+  pivoted
+end
+
+# -----
+
+input = []
+
+ARGF.each do |line|
+  input << line.split
+end
+
+pivoted = pivot(input)
+
+puts pivoted.flatten.compact.join(' ')
