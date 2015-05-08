@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby -w
+
+# Stash the homebrew formulae and gems installed on a given host to a
+# timestamped, host-specific file in ~/Dropbox/config/packages.
+#
+# (File under "hack and a half", but serves its purpose.)
+
+require 'Date'
+require 'FileUtils'
+
+class Stash
+
+  attr_accessor :stash_root
+
+  def initialize
+    @typemap = {
+      'gems' => {
+        command: 'gem',
+        flags:   '--no-version'
+      }
+    }
+
+    @stash_root= '~/.config/modulist'
+    @stash_path = File.expand_path(@stash_root)
+    FileUtils.mkdir_p(@stash_path)
+  end
+
+
+  def name_tail(type)
+    hostname = %x(hostname -s).chomp
+
+    "#{[hostname, type].join('_')}.txt"
+  end
+
+
+  def full_path(type)
+    date = Date.today.to_s
+
+    base = [date, name_tail(type)].join('_')
+
+    File.join(@stash_path, base)
+  end
+
+
+  def store(type)
+    latest = full_path(type)
+
+    command = type
+    flags = ''
+
+    # This is so wrong that the hell it earns me has yet to be defined.
+    if mapping = @typemap[type]
+      command = mapping[:command] || type
+      flags   = mapping[:flags]   || ''
+    end
+
+    items = %x(#{command} list #{flags})
+    puts "#{type}: #{items.split.count}"
+    File.open(latest, "w") do |handle|
+      handle.write(items)
+    end
+  end
+
+
+  def purge(type)
+    fileset = Dir.glob(File.join(@stash_path, "*#{name_tail(type)}")).sort
+    fileset.pop
+
+    fileset.each do |file|
+      FileUtils.rm(file)
+    end
+  end
+end
+
+
+# --------------------
+
+stash = Stash.new
+
+types = %w[brew gems]
+
+puts "Updating brew and gem lists in #{stash.stash_root}"
+
+types.each do |type|
+  stash.store(type)
+  stash.purge(type)
+end

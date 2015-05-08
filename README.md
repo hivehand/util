@@ -148,6 +148,11 @@ occurring lines. The above input would become:
     Charles
 
 
+## modulist
+
+Short for "module list". Stash lists of the locally-installed Homebrew packages and Ruby gems to ~/.config/packages. Each created file has a datestamp: previous stashed lists for the same host, if present, are deleted after the new one has been written.
+
+
 ## path
 
 At least 50 cents of solution to a nickel's worth of problem. So it
