@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 
 require 'time'
 
@@ -11,6 +11,16 @@ require 'time'
 #
 # If no time is specified, alert immediately.
 # If no color is specified, default to white.
+
+
+# Check whether any blink(1)s are attached, by checking the exit status of the
+# blink1-tool `--list` command.
+
+def blink1_present?
+  %x(blink1-tool --list)
+
+  $?.success?
+end
 
 def parse_args
   time = 0
@@ -44,11 +54,13 @@ end
 
 # --------
 
+abort 'No blink(1) detected!' unless blink1_present?
+
 time, color = parse_args
 
 # fork() won't work on Windows or NetBSD. (File under "Boo frickin' hoo".)
 
 fork {
   sleep(time)
-  %x(blink1-tool -q -m 0 -t 250 --#{color} --blink 6)
+  %x(blink1-tool -q -m 0 -t 250 --#{color} --blink 10)
 }

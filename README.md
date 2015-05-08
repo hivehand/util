@@ -12,7 +12,7 @@ may or may not find any of them remotely useful.
 
 A thin wrapper around [blink1-tool](http://blink1.thingm.com/blink1-tool/), the command-line interface to the nifty little USB LED gadget known as [blink(1)](http://blink1.thingm.com).
 
-It triggers six flashes over three seconds, in the color of your choice. If no color is given, it defaults to white. Specify a time in the future and it will flash then.
+It triggers ten flashes over five seconds, in the color of your choice. If no color is given, it defaults to white. Specify a time in the future and it will wait until then to flash.
 
 ## dl
 
@@ -150,7 +150,7 @@ occurring lines. The above input would become:
 
 ## modulist
 
-Short for "module list". Stash lists of the locally-installed Homebrew packages and Ruby gems to ~/.config/packages. Each created file has a datestamp: previous stashed lists for the same host, if present, are deleted after the new one has been written.
+Short for "module list". Stash lists of the locally-installed Homebrew packages and Ruby gems to `~/.config/packages`. Each created file has a datestamp: previous stashed lists for the same host, if present, are deleted after the new one has been written.
 
 
 ## path
