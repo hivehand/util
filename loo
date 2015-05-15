@@ -32,15 +32,15 @@ end
 # key order preservation to produce output containing the *first*
 # occurence of any given line.
 
-def singularize(source, order=:last)
+def singularize(source, order = :last)
   form = {}
 
   input = source.readlines
   input.each_with_index do |line, i|
-    form[line.rstrip] = i
+    form[line.strip] = i
   end
 
-  if order == :last
+  if order.eql?(:last)
     results = form.sort_by { |key, value| value }
     results.map(&:first)
   else
@@ -68,7 +68,7 @@ def atomic_write(target_name)
   File.rename(temp_name, target_name)
 end
 
-# -----------------
+# ------------------
 
 options = parse_args
 

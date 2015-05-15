@@ -12,6 +12,13 @@ require 'time'
 # If no time is specified, alert immediately.
 # If no color is specified, default to white.
 
+# TODO:
+#   - Support a help message.
+#   - Parse "in" along with "at"
+#   - Add support for a particular message.
+#     - say it, and create a notification, if provided.
+#
+#   - terminal-notifier -title "Alert" -message "Gepantsenpants!"
 
 # Check whether any blink(1)s are attached, by checking the exit status of the
 # blink1-tool `--list` command.
@@ -22,45 +29,79 @@ def blink1_present?
   $?.success?
 end
 
+
+# Take an offset expression. Return number of seconds.
+# TODO: Add support for "5m", "2m3s", etc.
+
+def parse_delay(delay)
+  values = delay.split(':').map(&:to_i)
+  total = 0
+  offset = 1
+
+  until values.empty? do
+    value = values.shift
+    total += value * offset
+    offset *= 60
+  end
+
+  total
+end
+
+
 def parse_args
   time = 0
-  color = 'on'
+  message = ""
+  color = 'white'
 
   until ARGV.empty? do
     arg = ARGV.shift
 
-    # Note that the code below won't deal with, say, alerting you just after
-    # midnight. We'll cross that bridge if we ever come to it.
+    now = Time.now
+
     if arg.eql?('at')
-      now = Time.now
       later = Time.parse(ARGV.shift)
-      abort "#{later.strftime('%H:%M:%S')} is in the past!" if now > later
+      # If the specified time was earlier today, push it to tomorrow,
+      # and alert the user that we're doing so.
+      if now > later
+        later += (24 * 3600)
+        puts "Alert set for #{later.strftime('%H:%M:%S')} tomorrow."
+      end
       time = later - now
-
-    # Someday we might implement the handling of relative delays, should we
-    # ever decide that we actually need them.
-
-    # elsif arg.eql?('in')
-    #   duration = ARGV.shift
-
+    elsif arg.eql?('in')
+      time = parse_delay(ARGV.shift)
+    elsif arg.eql?('to')
+      message = ARGV.shift
     else
       color = arg
     end
 
   end
 
-  [time, color]
+  [time, message, color]
 end
 
-# --------
+# ------------------
 
 abort 'No blink(1) detected!' unless blink1_present?
 
-time, color = parse_args
+time, message, color = parse_args
 
 # fork() won't work on Windows or NetBSD. (File under "Boo frickin' hoo".)
 
-fork {
+fork do
+  actions = [
+    %Q(blink1-tool -q -m 0 -t 250 --#{color} --blink 10)
+  ]
+
+  unless message.empty?
+    actions.concat [
+      %Q(say -v Daniel "#{message}"),
+      %Q(terminal-notifier -title "Alert" -message "#{message}")
+    ]
+  end
+
   sleep(time)
-  %x(blink1-tool -q -m 0 -t 250 --#{color} --blink 10)
-}
+  actions.each do |action|
+    fork { system(action) }
+  end
+end

@@ -19,7 +19,7 @@ def pivot(table)
   pivoted
 end
 
-# -----
+# ------------------
 
 input = []
 
