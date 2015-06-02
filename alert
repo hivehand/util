@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -w
 
 require 'time'
 
@@ -8,17 +8,15 @@ require 'time'
 #   alert yellow
 #   alert at 17:00
 #   alert red at 11:29
+#   alert green to "Green tea has finished brewing" in 2:45
 #
 # If no time is specified, alert immediately.
 # If no color is specified, default to white.
 
 # TODO:
-#   - Support a help message.
-#   - Parse "in" along with "at"
-#   - Add support for a particular message.
-#     - say it, and create a notification, if provided.
-#
-#   - terminal-notifier -title "Alert" -message "Gepantsenpants!"
+#   - Add an actual help message.
+#   - Move Alert to its own class.
+
 
 # Check whether any blink(1)s are attached, by checking the exit status of the
 # blink1-tool `--list` command.
@@ -30,7 +28,14 @@ def blink1_present?
 end
 
 
-# Take an offset expression. Return number of seconds.
+# Take a duration of the form
+#
+# [<hours>:][<minutes>:]seconds
+#
+# e.g. '2:30', '15:00', '1:30:00', etc.
+#
+# Return the equivalent number of seconds.
+#
 # TODO: Add support for "5m", "2m3s", etc.
 
 def parse_delay(delay)
@@ -39,7 +44,7 @@ def parse_delay(delay)
   offset = 1
 
   until values.empty? do
-    value = values.shift
+    value = values.pop
     total += value * offset
     offset *= 60
   end
@@ -95,6 +100,8 @@ fork do
 
   unless message.empty?
     actions.concat [
+      # I didn't pick Daniel because my ego likes the sound of my own name.
+      # I just liked the sound of the voice.
       %Q(say -v Daniel "#{message}"),
       %Q(terminal-notifier -title "Alert" -message "#{message}")
     ]
