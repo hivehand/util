@@ -5,8 +5,8 @@
 require 'optparse'
 
 class Path
-  def initialize(*args)
-    path_string = args.empty? ? ENV['PATH'] : args.join(":")
+  def initialize(var_name, *args)
+    path_string = args.empty? ? ENV[var_name] : args.join(":")
     @elements = path_string.split(/:/)
   end
 
@@ -22,7 +22,9 @@ end
 
 
 def parse_args
-  options = {}
+  options = {
+    var_name: 'PATH'
+  }
 
   op = OptionParser.new do |opts|
     opts.banner = <<-EOS.gsub(/^ */, '')
@@ -37,9 +39,12 @@ def parse_args
       $PATH.
     EOS
 
-    options[:clean] = false
     opts.on("-c", "--clean", "Clean path, removing any dupes.") do
       options[:clean] = true
+    end
+
+    opts.on("-m", "--manpath", "Examine MANPATH rather than PATH.") do
+      options[:var_name] = 'MANPATH'
     end
 
     opts.on("-p", "--pack", "Pack path into one long line.") do
@@ -58,6 +63,6 @@ args, options = parse_args
 
 separator = options[:pack] ? ":" : "\n"
 
-path = Path.new(*args)
+path = Path.new(options[:var_name], *args)
 path.clean if options[:clean]
 path.show(separator)
