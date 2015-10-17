@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+# bud: brew-update descriptions
+#
+# With the output of `brew update` in the paste buffer, this will list the
+# descriptions of the uninstalled formulae.
+
+require 'colorize'
+
+TEST=<<EOT
+clojurescript                     jboss-forge                       swiftgen
+emscripten                        libav                             tbb
+ffmbc                             openvdb                           trafficserver
+ffmpeg (installed)                pandoc-citeproc                   x264 (installed)
+haskell-stack                     pgcli
+heroku-toolbelt (installed)       sqlite (installed)
+EOT
+
+def pivot(table)
+  max_length = table.reduce(0) do |max, row|
+    ((current = row.length) > max) ? current : max
+  end
+
+  pivoted = []
+  for i in 0..(max_length - 1)
+    pivoted << table.map { |row| row[i] }.compact
+  end
+
+  pivoted
+end
+
+def split(lines, regex)
+  pieces = []
+  offset = 0
+  lines.each do |line|
+    matches = regex.match(line)
+    pieces << [matches[:left], matches[:right]]
+    current = matches[:left].length
+    offset = current if current > offset
+  end
+  [pieces, offset]
+end
+
+def present(pieces, offset, splitter)
+  pieces.each do |piece|
+    padding = ' ' * (offset - piece.first.length)
+    print(
+      padding,
+      piece.first.colorize(:blue),
+      splitter,
+      piece.last,
+      "\n"
+    )
+  end
+end
+
+# ------------------
+
+name_splitter = /\s{2,}|\n/
+installed = / \(installed\)$/
+
+desc_splitter = ':'
+desc_regex = /(?<left>.*?)#{desc_splitter}(?<right>.*)/
+
+input = %x(pbpaste).split("\n").inject([]) do |acc, line|
+  acc << line.split(name_splitter)
+end
+
+flattened = pivot(input).flatten
+filtered = flattened.reject { |update| installed.match(update) }
+
+descriptions = %x(brew desc #{filtered.join(' ')}).split("\n")
+
+pieces, offset = split(descriptions, desc_regex)
+present(pieces, offset, desc_splitter)

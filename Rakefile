@@ -1,7 +1,7 @@
 bin_dir = File.expand_path "~/bin"
 directory bin_dir
 
-files = %w[ alert dl jj loo modulist nn path spine tts ]
+files = %w[ alert bud dl jj loo modulist nn path ]
 files.concat Dir.glob("git-*")
 
 task :default => :deploy
