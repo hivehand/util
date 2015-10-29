@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+
+# Align a two-column table along its "spine".
+
+require 'colorize'
+
+
+# Given an array of lines and a regex representing the spine,
+# split each line into an array of pieces, left and right.
+# Return the array of arrays of pieces, along with the maximum
+# left-piece length.
+
+def split(lines, split_ex)
+  pieces = []
+  offset = 0
+  lines.each do |line|
+    matches = split_ex.match(line)
+    pieces << [matches[:left], matches[:right]]
+    offset = [offset, matches[:left].length].max
+  end
+  [pieces, offset]
+end
+
+
+# Take the pieces, the offset, and the splitter.
+# Output the pieces with left column colorized and right-aligned.
+
+def present(pieces, offset, splitter)
+  pieces.each do |piece|
+    print(' ' * (offset - piece.first.length),
+          piece.first.colorize(:blue),
+          splitter, piece.last, "\n")
+  end
+end
+
+
+# If we were given a command-line argument, use it as the "splitter";
+# otherwise, default to ':'.
+splitter = (ARGV.count.nonzero? ? ARGV.shift : ':')
+split_ex = /(?<left>.*?)#{splitter}(?<right>.*)/
+
+lines = ARGF.readlines.map(&:chomp)
+pieces, offset = split(lines, split_ex)
+present(pieces, offset, splitter)
