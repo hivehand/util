@@ -7,14 +7,8 @@
 
 require 'colorize'
 
-TEST=<<EOT
-clojurescript                     jboss-forge                       swiftgen
-emscripten                        libav                             tbb
-ffmbc                             openvdb                           trafficserver
-ffmpeg (installed)                pandoc-citeproc                   x264 (installed)
-haskell-stack                     pgcli
-heroku-toolbelt (installed)       sqlite (installed)
-EOT
+# Given an array of arrays representing successive rows of a table, return a
+# pivoted version of the table, with the original's columns turned into rows.
 
 def pivot(table)
   max_length = table.reduce(0) do |max, row|
@@ -29,17 +23,24 @@ def pivot(table)
   pivoted
 end
 
+# Given an array of lines and a regex containing "left" and "right" tags,
+# return:
+#
+# 1. An array of two-element arrays, representing the lines split on the
+#    regular expression.
+# 2. The length of the longest left-hand component.
+
 def split(lines, regex)
   pieces = []
   offset = 0
   lines.each do |line|
     matches = regex.match(line)
     pieces << [matches[:left], matches[:right]]
-    current = matches[:left].length
-    offset = current if current > offset
+    offset = [offset, matches[:left].length].max
   end
   [pieces, offset]
 end
+
 
 def present(pieces, offset, splitter)
   pieces.each do |piece|
@@ -56,11 +57,16 @@ end
 
 # ------------------
 
+# Names are separated by either AT LEAST two spaces, or a newline.
 name_splitter = /\s{2,}|\n/
+
+# Installed packages have their name-strings end with " (installed)".
 installed = / \(installed\)$/
 
 desc_splitter = ':'
 desc_regex = /(?<left>.*?)#{desc_splitter}(?<right>.*)/
+
+# Action!
 
 input = %x(pbpaste).split("\n").inject([]) do |acc, line|
   acc << line.split(name_splitter)
