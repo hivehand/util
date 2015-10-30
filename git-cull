@@ -1,0 +1,23 @@
+#! /usr/bin/env ruby
+
+# Delete all merged branches.
+
+# Current branch.
+current = proc { |branch| branch.start_with?('* ') }
+
+# Save the starting point (sp) branch, then checkout the master.
+sp = %x(git branch --list).split("\n").find(&current).sub('* ', '')
+%x(git checkout -q master)
+
+# Get a list of all merged branches that aren't the current branch.
+cullees = %x(git branch --merged).split("\n").map(&:strip).reject(&current)
+
+if cullees.empty?
+  puts "No merged branches to cull."
+else
+  cullees.each do |cullee|
+    system("git branch -d #{cullee}")
+  end
+end
+
+%x(git checkout -q #{sp}) unless cullees.include?(sp)
