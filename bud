@@ -2,10 +2,27 @@
 
 # bud: brew-update descriptions
 #
-# With the output of `brew update` in the paste buffer, this will list the
+# With the output of `brew update` in the paste buffer, list the
 # descriptions of the uninstalled formulae.
 
+require 'json'
 require 'colorize'
+
+# TODO: Add HTML output as an option.
+# TODO: Add automatic recognition of New/Updated sections.
+
+# Take a block of text representing a table. Break into an array of rows, with
+# each row an array of column entries.
+
+def tablify(input)
+  # Names are separated either by AT LEAST two spaces, or a newline.
+  column_divider = /\s{2,}|\n/
+
+  # Turn a succession of lines into an array of arrays representing a table.
+  input.split("\n").inject([]) do |acc, line|
+    acc << line.split(column_divider)
+  end
+end
 
 # Given an array of arrays representing successive rows of a table, return a
 # pivoted version of the table, with the original's columns turned into rows.
@@ -23,59 +40,44 @@ def pivot(table)
   pivoted
 end
 
-# Given an array of lines and a regex containing "left" and "right" tags,
-# return:
-#
-# 1. An array of two-element arrays, representing the lines split on the
-#    regular expression.
-# 2. The length of the longest left-hand component.
 
-def split(lines, regex)
-  pieces = []
-  offset = 0
-  lines.each do |line|
-    matches = regex.match(line)
-    pieces << [matches[:left], matches[:right]]
-    offset = [offset, matches[:left].length].max
-  end
-  [pieces, offset]
+def get_metadata
+  table = tablify(%x(pbpaste))
+
+  # Pivot the table, then flatten it into a sequential array.
+  flattened = pivot(table).flatten
+
+  # Installed packages have their name-strings end with " (installed)".
+  installed = / \(installed\)$/
+
+  # Filter out the installed formulae.
+  filtered = flattened.reject { |update| installed.match(update) }
+
+  nameset = filtered.join(' ')
+
+  JSON.parse(%x(brew info --json=v1 #{nameset}))
 end
 
 
-def present(pieces, offset, splitter)
-  pieces.each do |piece|
-    padding = ' ' * (offset - piece.first.length)
-    print(
-      padding,
-      piece.first.colorize(:blue),
-      splitter,
-      piece.last,
-      "\n"
+def stream_out(metadata)
+  margin = metadata.map { |entry| entry['name'].length }.max
+
+  metadata.each do |formula|
+    name, desc, homepage = formula.values_at(
+      *%w[name desc homepage]
     )
+    printf("%s%s: %s\n",
+           ' ' * (margin - name.length), name.colorize(:blue), desc)
+    printf("%s  %s\n",
+           ' ' * margin, homepage)
   end
+end
+
+def htmlify(metadata)
+
 end
 
 # ------------------
 
-# Names are separated by either AT LEAST two spaces, or a newline.
-name_splitter = /\s{2,}|\n/
-
-# Installed packages have their name-strings end with " (installed)".
-installed = / \(installed\)$/
-
-desc_splitter = ':'
-desc_regex = /(?<left>.*?)#{desc_splitter}(?<right>.*)/
-
-# Action!
-
-input = %x(pbpaste).split("\n").inject([]) do |acc, line|
-  acc << line.split(name_splitter)
-end
-
-flattened = pivot(input).flatten
-filtered = flattened.reject { |update| installed.match(update) }
-
-descriptions = %x(brew desc #{filtered.join(' ')}).split("\n")
-
-pieces, offset = split(descriptions, desc_regex)
-present(pieces, offset, desc_splitter)
+metadata = get_metadata
+stream_out(metadata)
