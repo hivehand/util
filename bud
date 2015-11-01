@@ -4,17 +4,74 @@
 #
 # With the output of `brew update` in the paste buffer, list the
 # descriptions of the uninstalled formulae.
+#
+# TODO:
+#   - Add an option to trigger terminal output.
+#   - Add automatic recognition of New/Updated sections.
+#   - Tweak colors to match terminal.
+
 
 require 'json'
 require 'colorize'
 
-# TODO: Add HTML output as an option.
-# TODO: Add automatic recognition of New/Updated sections.
+require 'haml'
+require 'html/table'
+
+require 'tempfile'
+
+include HTML
+
+
+STYLESHEET =<<EOF
+a:link {
+    text-decoration: none;
+    color: #000099;
+}
+
+a:visited {
+    color: #000099;
+}
+
+a:hover {
+    color:#0000FF;
+}
+
+a:active {
+    color:#DADAFF;
+}
+
+body {
+    font-family: -apple-system, "HelveticaNeue", "Helvetica";
+}
+
+table {
+  horizontal-align: center
+}
+
+td {
+    padding: 0.2em;
+}
+
+td.name {
+    text-align: right;
+}
+EOF
+
+
+template =<<EOF
+%html
+  %head
+    %title
+      bud
+    %style= STYLESHEET
+  %body= html_table(metadata)
+EOF
+
 
 # Take a block of text representing a table. Break into an array of rows, with
 # each row an array of column entries.
 
-def tablify(input)
+def parse_text_table(input)
   # Names are separated either by AT LEAST two spaces, or a newline.
   column_divider = /\s{2,}|\n/
 
@@ -42,7 +99,7 @@ end
 
 
 def get_metadata
-  table = tablify(%x(pbpaste))
+  table = parse_text_table(%x(pbpaste))
 
   # Pivot the table, then flatten it into a sequential array.
   flattened = pivot(table).flatten
@@ -58,14 +115,16 @@ def get_metadata
   JSON.parse(%x(brew info --json=v1 #{nameset}))
 end
 
+def bud_values(formula)
+  formula.values_at(*%w[name desc homepage])
+end
+
 
 def stream_out(metadata)
   margin = metadata.map { |entry| entry['name'].length }.max
 
   metadata.each do |formula|
-    name, desc, homepage = formula.values_at(
-      *%w[name desc homepage]
-    )
+    name, desc, homepage = bud_values(formula)
     printf("%s%s: %s\n",
            ' ' * (margin - name.length), name.colorize(:blue), desc)
     printf("%s  %s\n",
@@ -73,11 +132,46 @@ def stream_out(metadata)
   end
 end
 
-def htmlify(metadata)
 
+def html_table(metadata)
+  table = HTML::Table.new do |t|
+    t.align = 'center'
+  end
+
+  metadata.each do |formula|
+    content = Table::Row.new do |r|
+      name, desc, url = bud_values(formula)
+      r.content = [%Q(<a href="#{url}">#{name}</a>), desc]
+      r.first.class_ = 'name'
+    end
+    table.push content
+  end
+
+  table
+end
+
+
+def create_html(template, metadata)
+  engine = Haml::Engine.new(template)
+  engine.render(Object.new, { metadata: metadata })
+end
+
+
+def launch_browser(html)
+  fork do
+    Tempfile.open(%w[bud .html]) do |handle|
+      handle.write(html)
+      handle.flush
+      system("open #{handle.path}")
+      sleep 300
+    end
+  end
 end
 
 # ------------------
 
 metadata = get_metadata
-stream_out(metadata)
+
+# stream_out(metadata)
+html = create_html(template, metadata)
+launch_browser(html)
