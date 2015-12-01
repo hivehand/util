@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby -w
 
-# Stash the homebrew formulae and gems installed on a given host to a
-# timestamped, host-specific file in ~/Dropbox/config/packages.
+# A portmanteau of "module" and "list". Stashes the homebrew formulae and gems
+# installed on a given host to a timestamped, host-specific file in
+# ~/.config/modulist.
 #
-# (File under "hack and a half", but serves its purpose.)
+# (File under "hack and a half", but it serves its purpose.)
 
 require 'Date'
 require 'FileUtils'

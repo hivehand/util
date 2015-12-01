@@ -6,8 +6,8 @@
 # descriptions of the uninstalled formulae.
 #
 # TODO:
-#   - Add an option to trigger terminal output.
 #   - Add automatic recognition of New/Updated sections.
+#   - Add an option to trigger terminal output.
 #   - Tweak colors to match terminal.
 
 

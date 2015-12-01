@@ -1,11 +1,11 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 
 # Delete all merged branches.
 
 # Current branch.
 current = proc { |branch| branch.start_with?('* ') }
 
-# Save the starting point (sp) branch, then checkout the master.
+# Save the starting point (sp) branch, then check out the master.
 sp = %x(git branch --list).split("\n").find(&current).sub('* ', '')
 %x(git checkout -q master)
 

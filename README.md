@@ -10,9 +10,20 @@ may or may not find any of them remotely useful.
 
 ## alert
 
-A thin wrapper around [blink1-tool](http://blink1.thingm.com/blink1-tool/), the command-line interface to the nifty little USB LED gadget known as [blink(1)](http://blink1.thingm.com).
+A thin wrapper around [blink1-tool](http://blink1.thingm.com/blink1-tool/), the
+command-line interface to the nifty little USB LED gadget known as
+[blink(1)](http://blink1.thingm.com).
 
-It triggers ten flashes over five seconds, in the color of your choice. If no color is given, it defaults to white. Specify a time in the future and it will wait until then to flash.
+It triggers ten flashes over five seconds, in the color of your choice. If no
+color is given, it defaults to white. Specify a time in the future and it will
+wait until then to flash.
+
+## bud
+
+Short for "brew update descriptions". It takes the output of `brew update` and
+generates an HTML document consisting of one or more two-column tables: each
+cell in the the left column contains a package name, linked to its home page,
+while each cell in the right column contains the corresponding description.
 
 ## dl
 
@@ -49,20 +60,31 @@ Piped through `dl`, this produces:
       fizzbuzz.rb
       rcd
       uri_descape
-
+    
     ./util
       dl
       jj
       loo
       path
-
+    
     ./wip
       frag
       modulist
       nn
 
-The optional `-d` argument goes one step further and omits mention of
-the files, listing only the directories.
+The optional `-d` argument goes one step further and omits mention of the files,
+listing only the directories.
+
+
+## git-cull
+
+GitHub's pull-request model means that the local copy of any work repository I
+frequently pull from tends to accumulate lots of old branches, since the GitHub
+deletion of those branches immediately following the merge has no effect upon
+the corresponding local branches. `git cull` steps in to fix this. It notes the
+starting branch, switches over to master, gets a list of merged branches, and
+proceeds to delete them. Finally, if the starting branch wasn't one of the
+ones culled, it switches back to it.
 
 
 ## git-purge
@@ -73,8 +95,9 @@ of flinging water balloons filled with hydrochloric acid, then you might
 ultimately produce a tool as dangerous, as prone to creating inadvertent
 collateral damage, as this one.
 
-There are nevertheless times when you want to brutally and thoroughly clear
-a repository, or part thereof, of any local changes, without going to the trouble of cloning a fresh copy from origin. That's where this script comes in.
+There are nevertheless times when you want to brutally and thoroughly clear a
+repository, or part thereof, of any local changes, without going to the trouble
+of cloning a fresh copy from origin. That's where this script comes in.
 
 Given a target path, it will:
 
@@ -82,8 +105,9 @@ Given a target path, it will:
     git checkout -- ${target}
     git clean -fd ${target} 
 
-If *not* given a target path, it will default to the current directory.
-Just to be crystal clear: this is a tool designed from the outset to **throw away** data, so use with care.
+If *not* given a target path, it will default to the current directory. Just to
+be crystal clear: this is a tool designed from the outset to **throw away**
+data, so use with care.
 
 
 ## git-report
@@ -102,9 +126,9 @@ It's a one-command mechanism for getting a quick report on the state of the curr
 This tool pretty-prints JSON. In this, it is much like the doubtless
 orders-of-magnitude faster binary [jsonpp][]. Unlike jsonpp, however,
 it does not expect/demand to be given input in the form of one object
-per unbroken line. (To put it another way: jsonpp chokes when fed
+per unbroken line. (To put it another way: `jsonpp` chokes when fed
 properly- or even partially-formatted JSON, such as its own output,
-while jj does not.)
+while `jj` does not.)
 
 There are some minor differences in output style between jj and
 jsonpp. The former, for instance, always splits an array over multiple
@@ -150,21 +174,29 @@ occurring lines. The above input would become:
 
 ## modulist
 
-Short for "module list". Stash lists of the locally-installed Homebrew packages and Ruby gems to `~/.config/packages`. Each created file has a datestamp: previous stashed lists for the same host, if present, are deleted after the new one has been written.
+Short for "module list". Stash lists of the locally-installed Homebrew packages
+and Ruby gems to `~/.config/packages`. Each created file has a datestamp:
+previous stashed lists for the same host, if present, are deleted after the new
+one has been written.
 
 
 ## path
 
-At least 50 cents of solution to a nickel's worth of problem. So it
-goes. I hate deciphering the output of `echo $PATH`; now I don't have
-to. By default, this script pretty-prints the value of `$PATH`, with
-one entry per line. However, it can also be used to generate a new
-colon-separated value for `$PATH`, optionally removing duplicate
-occurrences of paths.
+At least 50 cents of solution to a nickel's worth of problem. So it goes. I hate
+deciphering the output of `echo $PATH`; now I don't have to. By default, this
+script pretty-prints the value of `$PATH`, with one entry per line. However, it
+can also be used to generate a new colon-separated value for `$PATH`, optionally
+removing duplicate occurrences of paths.
 
+## spine
 
-## tts
+Take output split into two columns by a known substring, the 'spine', and align
+it so that it's centered on said spine.
 
-'Table To Stream'. Some command-line tools, notably [homebrew](http://brew.sh)'s `brew update`, output lists of names carefully arranged into multiple columns.
+    foo: bar
+    very long string: baz
 
-Since I haven't found a way to make homebrew output a single-line list of updated formulae, which would be handy as input to `brew info` or `brew desc`, I've done the next best thing: written a little hack that takes a table of names, and turns it back into a single-line list.
+Would become:
+
+                 foo: bar
+    very long string: baz
