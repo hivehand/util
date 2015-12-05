@@ -1,15 +1,15 @@
 #!/usr/bin/env ruby
 
-# bud: brew-update descriptions
+# bur: brew-update report
 #
-# With the output of `brew update` in the paste buffer, list the
-# descriptions of the uninstalled formulae.
+# With the output of `brew update` in the paste buffer, or in a file passed as an argument,
+# generate and load an HTML page listing the formulae mentioned.
 #
-# TODO:
-#   - Add automatic recognition of New/Updated sections.
-#   - Add an option to trigger terminal output.
-#   - Tweak colors to match terminal.
+# SOMEDAY:
+#   - Turn all URLs in descriptions into links.
+#   - Smart-quote all descriptions.
 
+require 'date'
 
 require 'json'
 require 'colorize'
@@ -55,107 +55,140 @@ td {
 td.name {
     text-align: right;
 }
+
+td.title {
+    font-size: 2em;
+    text-align: right;
+}
 EOF
 
 
 template =<<EOF
 %html
   %head
-    %title
-      bud
+    %title= "bur #{Date.today}"
     %style= STYLESHEET
-  %body= html_table(metadata)
+  %body= monolith_table(groups, metadata)
 EOF
 
 
-# Take a block of text representing a table. Break into an array of rows, with
-# each row an array of column entries.
+# Take `brew update` output, and turn it into a hash of group names to Formula
+# names. Groups names are things like "New", "Updated", and "Renamed". We
+# delete the "Deleted" group, since by definition the members are no longer of
+# interest to us, and we can no longer retrieve their metadata.
+#
+# If we were passed a file name, open that and use its contents as the input;
+# otherwise, pull the content out of the paste buffer.
 
-def parse_text_table(input)
-  # Names are separated either by AT LEAST two spaces, or a newline.
+def extract_groups
+  groups = Hash.new { |hash, key| hash[key] = [] }
+  type_exp = /^==> (?<type>\S+) Formulae$/
   column_divider = /\s{2,}|\n/
+  cur_type = nil
 
-  # Turn a succession of lines into an array of arrays representing a table.
-  input.split("\n").inject([]) do |acc, line|
-    acc << line.split(column_divider)
-  end
-end
+  lines = ( ARGV.empty? ?
+            %x(pbpaste).split("\n") :
+            File.open(ARGV.first).readlines.map(&:chomp) )
 
-# Given an array of arrays representing successive rows of a table, return a
-# pivoted version of the table, with the original's columns turned into rows.
-
-def pivot(table)
-  max_length = table.reduce(0) do |max, row|
-    ((current = row.length) > max) ? current : max
-  end
-
-  pivoted = []
-  for i in 0..(max_length - 1)
-    pivoted << table.map { |row| row[i] }.compact
+  lines.each do |line|
+    if matched = type_exp.match(line)
+      cur_type = matched[:type]
+    elsif cur_type
+      groups[cur_type].concat(line.split(column_divider))
+    end
   end
 
-  pivoted
+
+  # Now that we've extracted the data from the output, get the proper names.
+  # This might well be split into its own method.
+
+  regexes = {
+    'Updated' => /^(?<name>\S+)(?: \(installed\))?$/,
+    'Renamed' => /^(?:\S+ -> )(?<name>\S+)$/
+  }
+
+  %w[Updated Renamed].each do |group|
+    if groups.has_key?(group)
+      groups[group].map! do |entry|
+        regexes[group].match(entry)[:name]
+      end
+    end
+  end
+
+  groups.delete('Deleted')
+
+  groups.each { |_, names| names.sort! }
+
+  groups
 end
 
 
-def get_metadata
-  table = parse_text_table(%x(pbpaste))
+# Generate a unique set of formula names, and get the metadata for them.
+# Return a hash whose keys are the full names for the Formulae, and values are
+# the Formula hashes.
 
-  # Pivot the table, then flatten it into a sequential array.
-  flattened = pivot(table).flatten
+def load_metadata(groups)
+  names = groups.values.flatten.uniq.join(' ')
+  raw = JSON.parse(%x(brew info --json=v1 #{names}))
 
-  # Installed packages have their name-strings end with " (installed)".
-  installed = / \(installed\)$/
-
-  # Filter out the installed formulae.
-  filtered = flattened.reject { |update| installed.match(update) }
-
-  nameset = filtered.join(' ')
-
-  JSON.parse(%x(brew info --json=v1 #{nameset}))
-end
-
-def bud_values(formula)
-  formula.values_at(*%w[name desc homepage])
-end
-
-
-def stream_out(metadata)
-  margin = metadata.map { |entry| entry['name'].length }.max
-
-  metadata.each do |formula|
-    name, desc, homepage = bud_values(formula)
-    printf("%s%s: %s\n",
-           ' ' * (margin - name.length), name.colorize(:blue), desc)
-    printf("%s  %s\n",
-           ' ' * margin, homepage)
+  raw.inject({}) do |named, entry|
+    named[entry['full_name']] = entry
+    named
   end
 end
 
 
-def html_table(metadata)
+# Having assembled both the names of the Formulae, grouped by the nature of
+# the change to them, and the metadata for all of them, generate one big table
+# laying them all out.
+
+def monolith_table(groups, metadata)
+  checkmark = "<span style='color: limegreen'>&#x2714 </span>"
+
+  formatters = {
+    'New'     => proc { |f| '' },
+    'Updated' => proc { |f| (metadata[f]['installed'].any? ? checkmark : '' ) },
+    'Renamed' => proc { |f| "#{metadata[f]['oldname']} &rarr; " }
+  }
+
   table = HTML::Table.new do |t|
     t.align = 'center'
   end
 
-  metadata.each do |formula|
-    content = Table::Row.new do |r|
-      name, desc, url = bud_values(formula)
-      r.content = [%Q(<a href="#{url}">#{name}</a>), desc]
-      r.first.class_ = 'name'
+  groups.each do |group_name, members|
+    title = Table::Row.new do |r|
+      r.content = group_name
+      r.first.class_ = 'title'
     end
-    table.push content
+    table.push title
+
+    formatter = formatters[group_name]
+
+    members.each do |formula|
+      content = Table::Row.new do |r|
+        link = "<a href=#{metadata[formula]['homepage']}>#{formula}</a>"
+        r.content = [formatter.call(formula) + link, metadata[formula]['desc']]
+        r.first.class_ = 'name'
+      end
+      table.push content
+    end
   end
 
   table
 end
 
 
-def create_html(template, metadata)
+def create_html(template, groups, metadata)
   engine = Haml::Engine.new(template)
-  engine.render(Object.new, { metadata: metadata })
+  engine.render(Object.new, { groups: groups, metadata: metadata })
 end
 
+
+# Create a temporary HTML file, and invoke the browser on it. If we just
+# called `open` and then let the block exit, the tempfile would be deleted
+# immediately, so quickly that the browser might not have a chance to load it.
+# So we sleep for 5 minutes. We wrap the whole act in a `fork` so that the
+# script itself exits immediately.
 
 def launch_browser(html)
   fork do
@@ -170,8 +203,7 @@ end
 
 # ------------------
 
-metadata = get_metadata
-
-# stream_out(metadata)
-html = create_html(template, metadata)
+groups = extract_groups
+metadata = load_metadata(groups)
+html = create_html(template, groups, metadata)
 launch_browser(html)

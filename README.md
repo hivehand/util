@@ -18,12 +18,12 @@ It triggers ten flashes over five seconds, in the color of your choice. If no
 color is given, it defaults to white. Specify a time in the future and it will
 wait until then to flash.
 
-## bud
+## bur
 
-Short for "brew update descriptions". It takes the output of `brew update` and
-generates an HTML document consisting of one or more two-column tables: each
-cell in the the left column contains a package name, linked to its home page,
-while each cell in the right column contains the corresponding description.
+Short for "brew update report". It takes the output of `brew update` and
+generates an HTML document consisting of a two-column table: each cell in the
+the left column contains a package name, linked to its home page, while each
+cell in the right column contains the corresponding description. Already-installed formulae are flagged with brew-style green check marks; renamed formulae are preceded by their previous name and an arrow.
 
 ## dl
 
@@ -83,8 +83,8 @@ frequently pull from tends to accumulate lots of old branches, since the GitHub
 deletion of those branches immediately following the merge has no effect upon
 the corresponding local branches. `git cull` steps in to fix this. It notes the
 starting branch, switches over to master, gets a list of merged branches, and
-proceeds to delete them. Finally, if the starting branch wasn't one of the
-ones culled, it switches back to it.
+proceeds to delete them. Finally, if the starting branch wasn't one of the ones
+culled, it switches back to it.
 
 
 ## git-purge
@@ -118,7 +118,8 @@ A very, *very* simple wrapper that just does the following:
     git status --column
     git stash list
 
-It's a one-command mechanism for getting a quick report on the state of the current repository and branch.
+It's a one-command mechanism for getting a quick report on the state of the
+current repository and branch.
 
 
 ## jj
