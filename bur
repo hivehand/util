@@ -5,6 +5,10 @@
 # With the output of `brew update` in the paste buffer, or in a file passed as an argument,
 # generate and load an HTML page listing the formulae mentioned.
 #
+# TODO:
+#   - Highlight row under cursor.
+#   - Make entire row clickable, if possible.
+#
 # SOMEDAY:
 #   - Turn all URLs in descriptions into links.
 #   - Smart-quote all descriptions.
@@ -52,14 +56,16 @@ td {
     padding: 0.2em;
 }
 
+tr.title {
+    font-size: 1.5em;
+    /* text-align: right; */
+    /* column-span: 2;    */
+}
+
 td.name {
     text-align: right;
 }
 
-td.title {
-    font-size: 2em;
-    text-align: right;
-}
 EOF
 
 
@@ -103,7 +109,7 @@ def extract_groups
   # This might well be split into its own method.
 
   regexes = {
-    'Updated' => /^(?<name>\S+)(?: \(installed\))?$/,
+    'Updated' => /^(?<name>\S+)(?: ✔)?$/,
     'Renamed' => /^(?:\S+ -> )(?<name>\S+)$/
   }
 
@@ -143,12 +149,12 @@ end
 # laying them all out.
 
 def monolith_table(groups, metadata)
-  checkmark = "<span style='color: limegreen'>&#x2714 </span>"
+  checkmark = " <span style='color: limegreen'>&#x2714</span>"
 
   formatters = {
-    'New'     => proc { |f| '' },
-    'Updated' => proc { |f| (metadata[f]['installed'].any? ? checkmark : '' ) },
-    'Renamed' => proc { |f| "#{metadata[f]['oldname']} &rarr; " }
+    'New'     => proc { |f, l| ['', '', l] },
+    'Updated' => proc { |f, l| ['', '', l + (metadata[f]['installed'].any? ? checkmark : '' ) ] },
+    'Renamed' => proc { |f, l| ["#{metadata[f]['oldname']}", "&rarr;", l ] }
   }
 
   table = HTML::Table.new do |t|
@@ -157,9 +163,9 @@ def monolith_table(groups, metadata)
 
   groups.each do |group_name, members|
     title = Table::Row.new do |r|
-      r.content = group_name
-      r.first.class_ = 'title'
+      r.content = ['', '', group_name]
     end
+    title.class_ = 'title'
     table.push title
 
     formatter = formatters[group_name]
@@ -167,7 +173,9 @@ def monolith_table(groups, metadata)
     members.each do |formula|
       content = Table::Row.new do |r|
         link = "<a href=#{metadata[formula]['homepage']}>#{formula}</a>"
-        r.content = [formatter.call(formula) + link, metadata[formula]['desc']]
+        r.content =  formatter.call(formula, link).push(
+                       metadata[formula]['desc']
+                     )
         r.first.class_ = 'name'
       end
       table.push content
