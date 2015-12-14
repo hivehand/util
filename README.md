@@ -21,9 +21,12 @@ wait until then to flash.
 ## bur
 
 Short for "brew update report". It takes the output of `brew update` and
-generates an HTML document consisting of a two-column table: each cell in the
-the left column contains a package name, linked to its home page, while each
-cell in the right column contains the corresponding description. Already-installed formulae are flagged with brew-style green check marks; renamed formulae are preceded by their previous name and an arrow.
+generates an HTML document consisting of a four-column table: the three left
+column contain the name of the formula, possibly accompanied by adornments, and
+linked to the corresponding project's home page; each cell in the right column
+contains the corresponding description. The aforementioned adornments include
+green check marks denoting installed formulae, and the previous name and an
+arrow in the case of renamed formulae.
 
 ## dl
 
