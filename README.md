@@ -3,7 +3,6 @@
 This is a small set of tools that scratch various personal itches. You
 may or may not find any of them remotely useful.
 
-
 (See also the excellent [moreutils][].)
 
 [moreutils]: https://joeyh.name/code/moreutils/

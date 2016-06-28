@@ -49,17 +49,29 @@ body {
 }
 
 table {
-  horizontal-align: center
+  horizontal-align: center;
+  border-collapse: collapse;
+  empty-cells: hide;
 }
 
-td {
-    padding: 0.2em;
+tr {
+  padding: 10em;
 }
 
 tr.title {
     font-size: 1.5em;
     /* text-align: right; */
     /* column-span: 2;    */
+}
+
+tr.alt {
+    background-color: #e6f3ff;
+}
+
+/* tr:nth-child(even){background-color: #f2f2f2} */
+
+td {
+  padding: 0.5em;
 }
 
 td.name {
@@ -161,6 +173,8 @@ def monolith_table(groups, metadata)
     t.align = 'center'
   end
 
+  even = false
+
   groups.each do |group_name, members|
     title = Table::Row.new do |r|
       r.content = ['', '', group_name]
@@ -177,6 +191,8 @@ def monolith_table(groups, metadata)
                        metadata[formula]['desc']
                      )
         r.first.class_ = 'name'
+        r.class_ = 'alt' if even
+        even = !even
       end
       table.push content
     end

@@ -20,4 +20,5 @@ else
   end
 end
 
+# Switch back to the starting point, unless it was one of the ones culled.
 %x(git checkout -q #{sp}) unless cullees.include?(sp)

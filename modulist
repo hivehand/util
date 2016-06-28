@@ -26,22 +26,30 @@ class Stash
     FileUtils.mkdir_p(@stash_path)
   end
 
+  # Return the tail end of a basename. This is separate from full_path because
+  # we also use the tail end as part of a glob for the `purge` step below.
 
   def name_tail(type)
     hostname = %x(hostname -s).chomp
 
-    "#{[hostname, type].join('_')}.txt"
+    [hostname, type].join('_') + '.txt'
   end
 
+  # Given the name of a type, return an absolute path, in the dedicated
+  # directory, to a file whose name incorporates the date, base hostname, and
+  # type.
 
   def full_path(type)
     date = Date.today.to_s
 
-    base = [date, name_tail(type)].join('_')
+    basename = [date, name_tail(type)].join('_')
 
-    File.join(@stash_path, base)
+    File.join(@stash_path, basename)
   end
 
+
+  # Given the name of a type (e.g. "brew", "gem"), write a list of currently-
+  # installed instances to a file.
 
   def store(type)
     latest = full_path(type)
@@ -62,6 +70,7 @@ class Stash
     end
   end
 
+  # Clean up by deleting all but the most recent stash for this host and type.
 
   def purge(type)
     fileset = Dir.glob(File.join(@stash_path, "*#{name_tail(type)}")).sort
