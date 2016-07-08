@@ -149,7 +149,9 @@ end
 # the Formula hashes.
 
 def load_metadata(groups)
-  names = groups.values.flatten.uniq.join(' ')
+  nameset = groups.values.flatten.uniq
+  basenames = nameset.map { |n| File.basename(n) }
+  names = basenames.join(' ')
   raw = JSON.parse(%x(brew info --json=v1 #{names}))
 
   raw.inject({}) do |named, entry|
