@@ -19,11 +19,14 @@ require 'json'
 require 'colorize'
 
 require 'haml'
-require 'html/table'
 
 require 'tempfile'
 
+require 'html/table'
 include HTML
+
+require 'erb'
+include ERB::Util
 
 
 STYLESHEET =<<EOF
@@ -188,7 +191,7 @@ def monolith_table(groups, metadata)
       content = Table::Row.new do |r|
         link = "<a href=#{metadata[formula]['homepage']}>#{formula}</a>"
         r.content =  formatter.call(formula, link).push(
-                       metadata[formula]['desc']
+                       h(metadata[formula]['desc'])
                      )
         r.first.class_ = 'name'
         r.class_ = 'alt' if even
