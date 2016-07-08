@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+if ARGV.empty?
+  puts "No files specified."
+else
+  ARGV.each do |file|
+    commits = {}
+
+    raw = `git shortlog -s -- #{file}`.split("\n")
+    pairs = raw.map { |el| el.split("\t") }
+    pairs.each do |pair|
+      commits[pair.last] = pair.first.lstrip.to_i
+    end
+
+    unless commits.empty?
+      puts "#{file}:"
+      commits.keys.sort.each do |culprit|
+        puts "  #{culprit}: #{commits[culprit]}"
+      end
+      puts
+    end
+  end
+end
