@@ -13,6 +13,8 @@
 #   - Turn all URLs in descriptions into links.
 #   - Smart-quote all descriptions.
 
+# http://www.w3schools.com/css/css_table.asp
+
 require 'date'
 
 require 'json'
@@ -61,17 +63,21 @@ tr {
   padding: 10em;
 }
 
+tr:nth-child(even) {
+  background-color: #e6f3ff;
+}
+
+/*
+ * tr:hover {
+ *   background-color: #f0f000;
+ * }
+ */
+
 tr.title {
     font-size: 1.5em;
     /* text-align: right; */
     /* column-span: 2;    */
 }
-
-tr.alt {
-    background-color: #e6f3ff;
-}
-
-/* tr:nth-child(even){background-color: #f2f2f2} */
 
 td {
   padding: 0.5em;
@@ -125,7 +131,7 @@ def extract_groups
 
   regexes = {
     'Updated' => /^(?<name>\S+)(?: ✔)?$/,
-    'Renamed' => /^(?:\S+ -> )(?<name>\S+)$/
+    'Renamed' => /^(?:\S+(?: ✔)? -> )(?<name>\S+)$/
   }
 
   %w[Updated Renamed].each do |group|
@@ -168,17 +174,16 @@ end
 def monolith_table(groups, metadata)
   checkmark = " <span style='color: limegreen'>&#x2714</span>"
 
+  # TODO: The checkmark crap below needs to be abstracted.
   formatters = {
     'New'     => proc { |f, l| ['', '', l] },
     'Updated' => proc { |f, l| ['', '', l + (metadata[f]['installed'].any? ? checkmark : '' ) ] },
-    'Renamed' => proc { |f, l| ["#{metadata[f]['oldname']}", "&rarr;", l ] }
+    'Renamed' => proc { |f, l| ["#{metadata[f]['oldname']}" + (metadata[f]['installed'].any? ? checkmark : '' ), "&rarr;", l ] }
   }
 
   table = HTML::Table.new do |t|
     t.align = 'center'
   end
-
-  even = false
 
   groups.each do |group_name, members|
     title = Table::Row.new do |r|
@@ -196,8 +201,6 @@ def monolith_table(groups, metadata)
                        h(metadata[formula]['desc'])
                      )
         r.first.class_ = 'name'
-        r.class_ = 'alt' if even
-        even = !even
       end
       table.push content
     end

@@ -1,7 +1,7 @@
 bin_dir = File.expand_path "~/bin"
 directory bin_dir
 
-files = %w[ alert bur dl jj loo modulist nn path psrender spine ]
+files = %w[ alert bur dl jj loo modulist new_script nn path psrender spine ]
 files.concat Dir.glob("brew-*")
 files.concat Dir.glob("git-*")
 
